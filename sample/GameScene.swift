@@ -24,6 +24,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var pinSprite:[SKSpriteNode] = []
     // タイマーを用意する
     var myTimer = Timer()
+    // プレイヤーを用意する
+    let playerSprite = SKSpriteNode(imageNamed: "player1.png")
     
     override func didMove(to view: SKView) {
         self.backgroundColor = UIColor(red: 0.8, green: 0.96, blue: 1, alpha: 1)
@@ -39,6 +41,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         groundSprite.physicsBody?.categoryBitMask = category_ground // 種類は、地面
         groundSprite.position = CGPoint(x: 375, y: 75)
         self.addChild(groundSprite)
+        
+        // プレイヤーを表示する
+        playerSprite.position = CGPoint(x:350, y:200)
+        playerSprite.physicsBody = SKPhysicsBody(circleOfRadius: 50)    // 物理ボディは半径50の円
+        playerSprite.physicsBody?.isDynamic = false
+        self.addChild(playerSprite)
+        playerSprite.physicsBody?.categoryBitMask = category_player     // 種類は、プレイヤー
+        // プレイヤーにパラパラアニメをするアクションをつける //修正
+        let playerAnime = SKAction.animate(with:
+            [SKTexture(imageNamed: "player1.png"),SKTexture(imageNamed: "player2.png")],
+            timePerFrame: 0.2)
+        let actionA = SKAction.repeatForever(playerAnime)
+        playerSprite.run(actionA)
         
         // 途中の障害物を表示する
         for i in 0...pinCount { // 0〜pinCountまで繰り返す
@@ -101,9 +116,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for touch: AnyObject in touches {
+            // ラベル人をタッチした位置に横移動する
+            playerSprite.position.x = touch.location(in: self).x
+        }
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -114,6 +134,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     
     override func update(_ currentTime: TimeInterval) {
-        // Called before each frame is rendered
+        // 障害物を移動させる
+        for i in 0...pinCount {// 0〜pinCountまで繰り返す
+            pinSprite[i].position.x += pinVX[i]
+            // もし、画面の右より外に出たら左に移動する
+            if 750 < pinSprite[i].position.x {
+                pinSprite[i].position.x = 1
+            }
+            // もし、画面の左より外に出たら右に移動する
+            if pinSprite[i].position.x < 0 {
+                pinSprite[i].position.x = 749
+            }
+        }
     }
 }
