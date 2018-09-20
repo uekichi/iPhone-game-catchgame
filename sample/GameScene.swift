@@ -16,6 +16,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let category_marsh:UInt32   = 1 << 2   // 0010
     let category_ground:UInt32  = 1 << 3   // 0100
     let category_other:UInt32   = 1 << 4   // 1000
+    // 地面を用意する
+    let groundSprite = SKSpriteNode(imageNamed: "ground.png")
+    // 障害物の準備をする
+    var pinCount = 5
+    var pinVX:[CGFloat] = []
+    var pinSprite:[SKSpriteNode] = []
     // タイマーを用意する
     var myTimer = Timer()
     
@@ -26,6 +32,34 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.physicsWorld.contactDelegate = self
         // 物理空間の外枠の種類は、その他
         self.physicsBody?.categoryBitMask = category_other
+        
+        // 地面を表示する
+        groundSprite.physicsBody = SKPhysicsBody(rectangleOf: groundSprite.size)
+        groundSprite.physicsBody?.isDynamic = false                   // 重力の影響を受けない
+        groundSprite.physicsBody?.categoryBitMask = category_ground // 種類は、地面
+        groundSprite.position = CGPoint(x: 375, y: 75)
+        self.addChild(groundSprite)
+        
+        // 途中の障害物を表示する
+        for i in 0...pinCount { // 0〜pinCountまで繰り返す
+            // 障害物のスプライトを作る
+            let pin = SKSpriteNode(imageNamed: "pin.png")
+            pin.physicsBody = SKPhysicsBody(circleOfRadius: 25)     // 物理ボディは半径25の円
+            pin.physicsBody?.isDynamic = false                        // 重力の影響を受けない
+            pin.physicsBody?.categoryBitMask = category_other       // 種類は、その他
+            
+            // ランダムな位置に登場させる
+            let rx = Int(arc4random_uniform(750))
+            let ry = i * 100 + 500
+            pin.position = CGPoint(x: rx, y: ry)
+            self.addChild(pin)
+            
+            // 作った障害物を配列に追加する
+            pinSprite.append(pin)
+            // 移動スピードもランダムに作って配列に追加する
+            pinVX.append(CGFloat(arc4random() % 20) - 10)
+        }
+        
         // タイマーをスタートする（1.0秒ごとにtimerUpdateを繰り返し実行）
         myTimer = Timer.scheduledTimer(timeInterval: 1.0,
                                                          target: self,
