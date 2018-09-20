@@ -26,6 +26,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var myTimer = Timer()
     // プレイヤーを用意する
     let playerSprite = SKSpriteNode(imageNamed: "player1.png")
+    // スコア表示を用意する
+    var score = 0
+    let scoreLabel = SKLabelNode(fontNamed: "Verdana-bold")
     
     override func didMove(to view: SKView) {
         self.backgroundColor = UIColor(red: 0.8, green: 0.96, blue: 1, alpha: 1)
@@ -34,6 +37,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.physicsWorld.contactDelegate = self
         // 物理空間の外枠の種類は、その他
         self.physicsBody?.categoryBitMask = category_other
+        
+        // スコアを表示する
+        scoreLabel.text = "SCORE:0"
+        scoreLabel.fontSize = 50
+        scoreLabel.horizontalAlignmentMode = .left
+        scoreLabel.fontColor = SKColor.black
+        scoreLabel.position = CGPoint(x:40, y:1250)
+        self.addChild(scoreLabel)
         
         // 地面を表示する
         groundSprite.physicsBody = SKPhysicsBody(rectangleOf: groundSprite.size)
@@ -146,5 +157,62 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 pinSprite[i].position.x = 749
             }
         }
+    }
+    
+    // 衝突したときの処理
+    func didBeginContact(contact: SKPhysicsContact) {
+        // bodyAとbodyBの衝突は、どちらがどちらかわからないのでチェックする
+        // もし、bodyAがマシュマロだったら
+        if contact.bodyA.node?.physicsBody?.categoryBitMask == category_marsh {
+            // 衝突したbodyBがプレイヤーだったら、食べる
+            if contact.bodyB.node == playerSprite {
+                catchMarsh()
+            }
+            // 衝突したbodyBが地面だったら、ミスにする
+            if contact.bodyB.node == groundSprite {
+                
+            }
+            // マシュマロのbodyAは消す
+            contact.bodyA.node!.removeFromParent()
+        }
+        // もし、bodyBがマシュマロだったら
+        if contact.bodyB.node?.physicsBody?.categoryBitMask == category_marsh {
+            // 衝突したbodyAがプレイヤーだったら、食べる
+            if contact.bodyA.node == playerSprite {
+                catchMarsh()
+            }
+            // 衝突したbodyAが地面だったら、ミスにする
+            if contact.bodyA.node == groundSprite {
+                
+            }
+            // マシュマロのbodyBは消す
+            contact.bodyB.node!.removeFromParent()
+        }
+    }
+    
+    // マシュマロキャッチしたときの処理
+    func catchMarsh() {
+        // スコアを追加する
+        score += 10
+        scoreLabel.text = "SCORE: \(score)"
+        
+        // 食べたところにハートを作る
+        let heartSprite = SKSpriteNode(imageNamed: "heart.png")
+        heartSprite.position = playerSprite.position
+        self.addChild(heartSprite)
+        
+        // 【ハートに少しずつ大きく上に上がって消えるアクションをつける】
+        // ハートを少しずつ大きくするアクション
+        let action1 = SKAction.scale(to: 2.0, duration: 0.4)
+        // ハートを上に100移動するアクション
+        let action2 = SKAction.moveBy(x: 0, y: 100, duration: 0.4)
+        // action1とaction2を同時に行う
+        let actionG = SKAction.group([action1, action2])
+        // ハートを削除するアクション
+        let action3 = SKAction.removeFromParent()
+        // actionGとaction3を順番に行う
+        let actionS = SKAction.sequence([actionG, action3])
+        // ハートにアクションをつける
+        heartSprite.run(actionS)
     }
 }
